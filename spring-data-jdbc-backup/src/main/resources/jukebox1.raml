@@ -1,0 +1,74 @@
+Show the full list of artists.
+Show the full list of albums.
+Show the list of artists by nationality.
+Show the list of albums by genre.
+Search for a song by title.
+Show a particular artist's albums collection.
+Show a particular album's songs list.
+Play a song (by specifying the song id).
+Enter new Artists, Albums and Songs (only authenticated users).
+Consideration: This is a jukebox, not a command line. People in pubs might be unable to type lots of characters, so a user friendly UI (paging, image-based, etc) would be very appreciated.
+
+
+baseUri:http://localhost:8080/api/jukebox/{version}
+version:
+
+/songs:
+  get:
+    description: Get a list of songs based on song title.
+    queryParameters:
+      songTitle:
+        description: "Keywords or the title of the song to search (it is case insensitive. and doesn't need to match the whole title.)"
+        type: string
+        required: true
+        minLength: 3
+        example: "Get L"
+      responses:
+        200:
+          body:
+            application/json:
+              type: |
+                {
+                  "type":"object",
+                  "$schema":"http://json-schema.org/draft-03/schema",
+                  "id":"http://jsonschema.net",
+                  "required":"true",
+                  "properties": {
+                    "songTitle": {
+                      "type":"string",
+                      "required":true
+                    }
+                  }
+                }
+              example: |
+                {
+                  "songs": [
+                    {
+                      "songId":"123", //Comment.. This element if not present in the type.
+                      "songTitle":"Billie Jean"
+                    },
+                    {
+                      "songId":"123",
+                      "songTitle":"Billie Jean"
+                    }
+                  ]
+                }
+  post:
+    description: post a song
+  /{songId}:
+    get:
+    /fileContent:
+      get:
+
+/artists:
+  get:
+  /{artistName}:
+    get:
+    /albums:
+      get:
+/albums:
+  get:
+  /{albumId}:
+    get:
+    /songs:
+      get:
