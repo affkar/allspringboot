@@ -1,14 +1,14 @@
-package hello;
+package com.karthick.springboot.samples.springboot2.unittesting;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public clas
-        s Application{
+public class Application {
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class,args);
+        System.out.println("Application.main");
+        SpringApplication.run(Application.class, args);
     }
 
 }
