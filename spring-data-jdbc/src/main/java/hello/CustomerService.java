@@ -68,4 +68,8 @@ public class CustomerService {
 
         LOGGER.info("Complete!!!");
     }
+
+    public Customer getCustomerById(Long id) {
+        return customerRepository.getCustomerById(id);
+    }
 }

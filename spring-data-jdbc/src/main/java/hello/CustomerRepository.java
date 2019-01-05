@@ -18,4 +18,5 @@ public interface CustomerRepository{
 
     void deleteAllCustomers();
 
+    Customer getCustomerById(Long id);
 }

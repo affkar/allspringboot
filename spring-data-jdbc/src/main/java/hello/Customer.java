@@ -1,12 +1,16 @@
 package hello;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.springframework.data.annotation.Id;
 
 public class Customer{
 
     @Id
+    @ApiModelProperty(notes = "Database Id of the Customer")
     private Long id;
+    @ApiModelProperty(notes = "FirstName of the Customer",required = true)
     private String firstName;
+    @ApiModelProperty(notes = "LastName of the Customer",required = true)
     private String lastName;
 
     public Customer(Long id, String firstName, String lastName) {
@@ -18,6 +22,9 @@ public class Customer{
     public Customer(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
+    }
+
+    public Customer() {
     }
 
     public Long getId() {

@@ -3,6 +3,7 @@ package hello;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -30,12 +31,12 @@ public class CustomerRepositoryImpl implements CustomerRepository{
 
     @Override
     public void deleteCustomersByFirstName(String firstName) {
-        jdbcTemplate.update("delete from Customer where firstName=?",new Object[]{firstName});
+        jdbcTemplate.update("delete from Customer where first_Name=?",new Object[]{firstName});
     }
 
     @Override
     public void deleteCustomersByLastName(String lastName) {
-        jdbcTemplate.update("delete from Customer where lastName=?",new Object[]{lastName});
+        jdbcTemplate.update("delete from Customer where last_Name=?",new Object[]{lastName});
     }
 
     @Override
@@ -46,6 +47,16 @@ public class CustomerRepositoryImpl implements CustomerRepository{
     @Override
     public void deleteAllCustomers() {
         jdbcTemplate.execute("delete from Customer");
+    }
+
+    @Override
+    public Customer getCustomerById(Long id) {
+            List<Object[]> result = jdbcTemplate.query("select * from Customer where Customer_ID=?", new Object[]{id}, (rs, rowNum) -> new Object[]{rs.getLong("customer_id"), rs.getString("first_name"), rs.getString("last_name")});
+            LOGGER.info("Results are {}", result);
+            if(result.isEmpty()){
+                throw new DataRetrievalFailureException("Can't find Customer with ID "+id);
+            }
+            return new Customer(Long.valueOf(result.get(0)[0].toString()), result.get(0)[1].toString(), result.get(0)[2].toString());
     }
 
     @Override
