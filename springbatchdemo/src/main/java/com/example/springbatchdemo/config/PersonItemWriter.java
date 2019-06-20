@@ -8,16 +8,10 @@ import java.util.List;
 @StepScope
 public class PersonItemWriter implements ItemWriter<Person> {
 
-    private final PersonService personService;
-
-    public PersonItemWriter(PersonService personService) {
-        this.personService=personService;
-    }
-
     @Override
     public void write(List<? extends Person> list) {
         for (Person person: list){
-            personService.persistServiceAndDoOtherThings(person);
+            System.out.println("In Writer : person = " + person);
         }
     }
 

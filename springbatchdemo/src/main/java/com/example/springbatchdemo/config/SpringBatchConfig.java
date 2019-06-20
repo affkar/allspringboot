@@ -37,32 +37,29 @@ public class SpringBatchConfig {
 
     @Bean
     public Step myStep(StepBuilderFactory stepBuilderFactory, ItemReader<? extends Person> reader, ItemProcessor<? super Person, ? extends Person> processor, ItemWriter<? super Person> writer) {
-        return stepBuilderFactory.get("ETLLoadStep").<Person,Person>chunk(100).reader(reader).faultTolerant().skip(RuntimeException.class).skipLimit(3)
+        return stepBuilderFactory.get("ETLLoadStep").<Person,Person>chunk(6).reader(reader).faultTolerant()
+                .skip(RuntimeException.class).skipLimit(3)
+                .noRetry(Exception.class)
+                .noRollback(Exception.class)
                 .processor(processor)
                 .writer(writer).build();
     }
 
     @Bean
-    public ItemWriter<? super Person> writer(EntityManagerFactory entityManagerFactory, PersonService personService) {
+    public ItemWriter<? super Person> writer(EntityManagerFactory entityManagerFactory) {
         /*JpaItemWriter<Person> userJpaItemWriter = new JpaItemWriter<>();
         userJpaItemWriter.setEntityManagerFactory(entityManagerFactory);
         return userJpaItemWriter;*/
-        return new PersonItemWriter(personService);
+        return new PersonItemWriter();
     }
 
 
     @Bean
-    public ItemProcessor<? super Person,? extends Person> processor() {
-        Map<Integer, String> deptIdToDeptName=new HashMap<>();
-        deptIdToDeptName.put(1, "Finance");
-        deptIdToDeptName.put(2, "Error");
-        deptIdToDeptName.put(3, "HR");
-
+    public ItemProcessor<? super Person,? extends Person> processor(final PersonService personService) {
         return person -> {
-          person.setDept(deptIdToDeptName.get(person.getId()));
+            personService.persistServiceAndDoOtherThings(person);
           return person;
         };
-
     }
 
     @Bean

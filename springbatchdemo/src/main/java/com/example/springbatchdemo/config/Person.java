@@ -69,4 +69,14 @@ public class Person {
     public void setSalary(Integer salary) {
         this.salary = salary;
     }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", dept='" + dept + '\'' +
+                ", salary=" + salary +
+                '}';
+    }
 }
