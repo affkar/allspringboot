@@ -1,6 +1,6 @@
 package com.example.springbatchdemo.config;
 
-import com.example.springbatchdemo.model.User;
+import com.example.springbatchdemo.repository.PersonRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -8,6 +8,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
@@ -21,64 +22,65 @@ import org.springframework.core.io.Resource;
 
 import javax.persistence.EntityManagerFactory;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Configuration
 @EnableBatchProcessing
-
 public class SpringBatchConfig {
 
     @Bean
-    private Job job(JobBuilderFactory jobBuilderFactory){
-        return jobBuilderFactory.get("ETLLoad").incrementer(new RunIdIncrementer()).start(step());
+    public Job job(JobBuilderFactory jobBuilderFactory, Step myStep){
+        return jobBuilderFactory.get("ETLLoad").incrementer(new RunIdIncrementer()).start(myStep).build();
     }
 
 
     @Bean
-    public Step step(StepBuilderFactory stepBuilderFactory, ItemWriter<? super User> writer) {
-        return stepBuilderFactory.get("ETLLoadStep").<User,User>chunk(100).reader(reader())
-                .processor(processor())
+    public Step myStep(StepBuilderFactory stepBuilderFactory, ItemReader<? extends Person> reader, ItemProcessor<? super Person, ? extends Person> processor, ItemWriter<? super Person> writer) {
+        return stepBuilderFactory.get("ETLLoadStep").<Person,Person>chunk(100).reader(reader).faultTolerant().skip(RuntimeException.class).skipLimit(3)
+                .processor(processor)
                 .writer(writer).build();
     }
 
     @Bean
-    public ItemWriter<? super User> writer(EntityManagerFactory entityManagerFactory) {
-        JpaItemWriter<User> userJpaItemWriter = new JpaItemWriter<>();
+    public ItemWriter<? super Person> writer(EntityManagerFactory entityManagerFactory, PersonService personService) {
+        /*JpaItemWriter<Person> userJpaItemWriter = new JpaItemWriter<>();
         userJpaItemWriter.setEntityManagerFactory(entityManagerFactory);
-        return userJpaItemWriter;
+        return userJpaItemWriter;*/
+        return new PersonItemWriter(personService);
     }
 
 
     @Bean
-    public ItemProcessor<? super User,? extends User> processor() {
-        Map<String, String> deptIdToDeptName=new HashMap<>();
-        deptIdToDeptName.put("001","Finance");
-        deptIdToDeptName.put("002","HR");
-        deptIdToDeptName.put("003","Accounts");
+    public ItemProcessor<? super Person,? extends Person> processor() {
+        Map<Integer, String> deptIdToDeptName=new HashMap<>();
+        deptIdToDeptName.put(1, "Finance");
+        deptIdToDeptName.put(2, "Error");
+        deptIdToDeptName.put(3, "HR");
 
-        return user -> {
-          user.setDept(deptIdToDeptName.get(user.getDept()));
-          return user;
+        return person -> {
+          person.setDept(deptIdToDeptName.get(person.getId()));
+          return person;
         };
 
     }
 
     @Bean
-    public FlatFileItemReader<User> reader(@Value("${input}") Resource resource) {
-        FlatFileItemReader<User> u = new FlatFileItemReader<>();
+    public FlatFileItemReader<Person> reader(@Value("${input}") Resource resource) {
+        FlatFileItemReader<Person> u = new FlatFileItemReader<>();
         u.setResource(resource);
         u.setStrict(false);
         u.setLinesToSkip(1);
 
-        DefaultLineMapper<User> lineMapper=new DefaultLineMapper<>();
+        DefaultLineMapper<Person> lineMapper=new DefaultLineMapper<>();
         DelimitedLineTokenizer delimitedLineTokenizer= new DelimitedLineTokenizer();
         delimitedLineTokenizer.setDelimiter(",");
         delimitedLineTokenizer.setNames(new String[]{"id","name","dept","salary"});
 
         lineMapper.setLineTokenizer(delimitedLineTokenizer);
 
-        BeanWrapperFieldSetMapper<User> beanWrapperFieldSetMapper=new BeanWrapperFieldSetMapper<>();
-        beanWrapperFieldSetMapper.setTargetType(User.class);
+        BeanWrapperFieldSetMapper<Person> beanWrapperFieldSetMapper=new BeanWrapperFieldSetMapper<>();
+        beanWrapperFieldSetMapper.setTargetType(Person.class);
 
         lineMapper.setFieldSetMapper(beanWrapperFieldSetMapper);
 
