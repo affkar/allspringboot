@@ -1,6 +1,5 @@
 package com.example.springbatchdemo.config;
 
-import com.example.springbatchdemo.repository.PersonRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -10,7 +9,6 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
@@ -22,7 +20,6 @@ import org.springframework.core.io.Resource;
 
 import javax.persistence.EntityManagerFactory;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Configuration
@@ -37,16 +34,14 @@ public class SpringBatchConfig {
 
     @Bean
     public Step myStep(StepBuilderFactory stepBuilderFactory, ItemReader<? extends Person> reader, ItemProcessor<? super Person, ? extends Person> processor, ItemWriter<? super Person> writer) {
-        return stepBuilderFactory.get("ETLLoadStep").<Person,Person>chunk(100).reader(reader).faultTolerant().skip(RuntimeException.class).skipLimit(3)
+        return stepBuilderFactory.get("ETLLoadStep").<Person,Person>chunk(100).reader(reader)//.faultTolerant().skip(RuntimeException.class).skipLimit(3)
                 .processor(processor)
+
                 .writer(writer).build();
     }
 
     @Bean
     public ItemWriter<? super Person> writer(EntityManagerFactory entityManagerFactory, PersonService personService) {
-        /*JpaItemWriter<Person> userJpaItemWriter = new JpaItemWriter<>();
-        userJpaItemWriter.setEntityManagerFactory(entityManagerFactory);
-        return userJpaItemWriter;*/
         return new PersonItemWriter(personService);
     }
 
