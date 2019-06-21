@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +29,7 @@ public class PersonService {
         }
     }
 
-
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void persistServiceAndDoOtherThings(Person person) {
         Map<Integer, String> deptIdToDeptName=new HashMap<>();
         deptIdToDeptName.put(1, "Finance");

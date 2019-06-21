@@ -1,6 +1,5 @@
 package com.example.springbatchdemo.config;
 
-import com.example.springbatchdemo.repository.PersonRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -10,7 +9,6 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
@@ -19,11 +17,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
+import org.springframework.transaction.UnexpectedRollbackException;
+import org.springframework.transaction.interceptor.TransactionAttribute;
 
 import javax.persistence.EntityManagerFactory;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Configuration
 @EnableBatchProcessing
@@ -37,10 +34,13 @@ public class SpringBatchConfig {
 
     @Bean
     public Step myStep(StepBuilderFactory stepBuilderFactory, ItemReader<? extends Person> reader, ItemProcessor<? super Person, ? extends Person> processor, ItemWriter<? super Person> writer) {
-        return stepBuilderFactory.get("ETLLoadStep").<Person,Person>chunk(6).reader(reader).faultTolerant()
+        return stepBuilderFactory.get("ETLLoadStep").<Person,Person>chunk(1).reader(reader)
+                .faultTolerant()
                 .skip(RuntimeException.class).skipLimit(3)
-                .noRetry(Exception.class)
-                .noRollback(Exception.class)
+//                .noRetry(Exception.class)
+//                .noRollback(Exception.class)
+//                .transactionAttribute(transAttrib)
+                .processorNonTransactional()
                 .processor(processor)
                 .writer(writer).build();
     }
@@ -57,7 +57,12 @@ public class SpringBatchConfig {
     @Bean
     public ItemProcessor<? super Person,? extends Person> processor(final PersonService personService) {
         return person -> {
-            personService.persistServiceAndDoOtherThings(person);
+            try {
+                personService.persistServiceAndDoOtherThings(person);
+            }catch(RuntimeException e){
+                System.out.println("got back an exception "+e.getMessage() );
+                e.printStackTrace();
+            }
           return person;
         };
     }
