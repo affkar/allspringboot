@@ -34,9 +34,8 @@ public class SpringBatchConfig {
 
     @Bean
     public Step myStep(StepBuilderFactory stepBuilderFactory, ItemReader<? extends Person> reader, ItemProcessor<? super Person, ? extends Person> processor, ItemWriter<? super Person> writer) {
-        return stepBuilderFactory.get("ETLLoadStep").<Person,Person>chunk(100).reader(reader)//.faultTolerant().skip(RuntimeException.class).skipLimit(3)
+        return stepBuilderFactory.get("ETLLoadStep").<Person,Person>chunk(1).reader(reader)//.faultTolerant().skip(RuntimeException.class).skipLimit(3)
                 .processor(processor)
-
                 .writer(writer).build();
     }
 

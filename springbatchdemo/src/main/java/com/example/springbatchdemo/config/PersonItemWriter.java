@@ -19,9 +19,11 @@ public class PersonItemWriter implements ItemWriter<Person> {
 
     @Override
     public void write(List<? extends Person> list) {
+        LOG.info("Writer ::: Got a List with {}", list);
         for (Person person: list){
             try {
                 personService.persistServiceAndDoOtherThings(person);
+                LOG.info("service call complete for {}", person);
             }catch(Exception e){
                 LOG.error("Error Processing [" + person+"]", e);
             }
